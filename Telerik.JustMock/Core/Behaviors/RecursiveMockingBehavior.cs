@@ -46,7 +46,7 @@ namespace Telerik.JustMock.Core.Behaviors
 
 		public void Process(Invocation invocation)
 		{
-			if (invocation.IsReturnValueSet)
+			if (invocation.IsReturnValueSet || invocation.CallOriginal)
 				return;
 
 			var returnType = invocation.Method.GetReturnType();
@@ -133,7 +133,6 @@ namespace Telerik.JustMock.Core.Behaviors
 			}
 
 			invocation.ReturnValue = mock;
-			invocation.CallOriginal = false;
 			invocation.UserProvidedImplementation = true;
 		}
 	}

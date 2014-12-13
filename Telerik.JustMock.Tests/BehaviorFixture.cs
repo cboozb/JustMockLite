@@ -222,5 +222,25 @@ namespace Telerik.JustMock.Tests
 				throw new InvalidOperationException();
 			}
 		}
+
+		[TestMethod, TestCategory("Lite"), TestCategory("Mock")]
+		public void CallOriginalBehavior_CallUnarrangedMethod_ActsLikeRecursiveLoose()
+		{
+			var node = Mock.Create<ExpressionNode>(Behavior.CallOriginal);
+			var value = node.GetValue();
+			Assert.NotNull(value);
+		}
+
+		public enum ExpressionNodeType
+		{
+			Constant,
+			Binary
+		}
+
+		public abstract class ExpressionNode
+		{
+			public abstract ExpressionNodeType NodeType { get; }
+			public abstract object GetValue();
+		}
 	}
 }

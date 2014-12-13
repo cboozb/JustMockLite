@@ -878,11 +878,12 @@ namespace Telerik.JustMock.Tests
 			Assert.True(foo.FindOne(criteria));
 		}
 
-		[TestMethod, TestCategory("Lite"), TestCategory("Mock")]
-		public void ShouldThrowNotImplementedExceptionForBaseInovocationOnAbstract()
+		[TestMethod, TestCategory("Lite"), TestCategory("Behavior"), TestCategory("CallOriginal")]
+		public void CallOriginalClause_AbstractMethod_ThrowsNotImplemented()
 		{
-			var node = Mock.Create<ExpressionNode>(Behavior.CallOriginal);
-			Assert.Throws<NotImplementedException>(() => { var expected = node.NodeType; });
+			var mock = Mock.Create<IFoo>();
+			Mock.Arrange(() => mock.JustCall()).CallOriginal();
+			Assert.Throws<NotImplementedException>(() => mock.JustCall());
 		}
 
 		[TestMethod, TestCategory("Lite"), TestCategory("Mock")]
@@ -1754,17 +1755,6 @@ namespace Telerik.JustMock.Tests
 
 		public class MesssageBox
 		{
-		}
-
-		public enum ExpressionNodeType
-		{
-			Constant,
-			Binary
-		}
-
-		public abstract class ExpressionNode
-		{
-			public abstract ExpressionNodeType NodeType { get; }
 		}
 
 		public class RealItem

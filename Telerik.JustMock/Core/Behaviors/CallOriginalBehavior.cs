@@ -20,9 +20,17 @@ namespace Telerik.JustMock.Core.Behaviors
 {
 	internal class CallOriginalBehavior : IBehavior
 	{
+		private readonly bool skipAbstract;
+
+		public CallOriginalBehavior(bool skipAbstract)
+		{
+			this.skipAbstract = skipAbstract;
+		}
+
 		public void Process(Invocation invocation)
 		{
-			if (ShouldCallOriginal(invocation))
+			var mayCallAbstract = !this.skipAbstract || !invocation.MethodInvocationTarget.IsAbstract;
+			if (ShouldCallOriginal(invocation) && mayCallAbstract)
 			{
 				invocation.UserProvidedImplementation = true;
 				invocation.CallOriginal = true;

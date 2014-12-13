@@ -42,6 +42,7 @@ namespace Telerik.JustMock.Core
 			ProfilerInterceptor.GuardInternal(() =>
 			{
 				var mockInvocation = new Invocation(invocation.Proxy, invocation.GetConcreteMethod(), invocation.Arguments);
+				mockInvocation.MethodInvocationTarget = invocation.GetConcreteMethodInvocationTarget();
 
 				DebugView.TraceEvent(IndentLevel.Dispatch, () => String.Format("Intercepted DP call: {0}", mockInvocation.InputToString()));
 				DebugView.PrintStackTrace();

@@ -286,7 +286,7 @@ namespace Telerik.JustMock.Expectations
 		{
 			return ProfilerInterceptor.GuardInternal(() =>
 				{
-					this.behaviors.Add(new CallOriginalBehavior());
+					this.behaviors.Add(new CallOriginalBehavior(skipAbstract: false));
 					return this;
 				});
 		}

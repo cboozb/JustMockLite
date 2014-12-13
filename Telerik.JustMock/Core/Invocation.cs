@@ -47,6 +47,7 @@ namespace Telerik.JustMock.Core
 			get { return this.isReturnValueSet; }
 		}
 
+		internal MethodBase MethodInvocationTarget { get; set; }
 		internal bool CallOriginal { get; set; }
 		internal bool UserProvidedImplementation { get; set; }
 		internal bool InArrange { get; set; }
@@ -60,6 +61,7 @@ namespace Telerik.JustMock.Core
 		{
 			this.Instance = instance;
 			this.Method = method;
+			this.MethodInvocationTarget = method;
 			this.Args = args;
 		}
 

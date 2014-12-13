@@ -28,6 +28,11 @@ namespace Telerik.JustMock.Core.Behaviors
 
 		public void Process(Invocation invocation)
 		{
+			if (invocation.UserProvidedImplementation)
+			{
+				return;
+			}
+
 			var method = invocation.Method;
 			var property = method.GetPropertyFromGetOrSet();
 			if (property == null)

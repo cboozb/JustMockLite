@@ -76,7 +76,7 @@ namespace Telerik.JustMock.Core.TransparentProxy
 
 		public MethodInfo GetConcreteMethodInvocationTarget()
 		{
-			throw new NotSupportedException();
+			return GetConcreteMethod();
 		}
 
 		public Type[] GenericArguments
