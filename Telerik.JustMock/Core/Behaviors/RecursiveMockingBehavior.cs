@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Telerik.JustMock.Core.Context;
+using Telerik.JustMock.Setup;
 
 namespace Telerik.JustMock.Core.Behaviors
 {
@@ -34,8 +35,10 @@ namespace Telerik.JustMock.Core.Behaviors
 
 	internal class RecursiveMockingBehavior : IBehavior
 	{
-		private readonly Dictionary<MethodBase, List<KeyValuePair<object, object>>> mocks
-			= new Dictionary<MethodBase, List<KeyValuePair<object, object>>>();
+		// can't put the key part in a Dictionary,
+		// because we can't be sure that GetHashCode() works
+		private readonly Dictionary<MethodBase, List<KeyValuePair<WeakReference, object>>> mocks
+			= new Dictionary<MethodBase, List<KeyValuePair<WeakReference, object>>>();
 
 		private readonly RecursiveMockingBehaviorType type;
 
@@ -54,12 +57,26 @@ namespace Telerik.JustMock.Core.Behaviors
 				return;
 
 			object mock = null;
-			List<KeyValuePair<object, object>> mocksList;
+			List<KeyValuePair<WeakReference, object>> mocksList;
 			if (mocks.TryGetValue(invocation.Method, out mocksList))
 			{
-				// can't put the key part in a Dictionary,
-				// because we can't be sure that GetHashCode() works
-				mock = mocksList.FirstOrDefault(kvp => Equals(kvp.Key, invocation.Instance)).Value;
+				for (int i = 0; i < mocksList.Count; )
+				{
+					var parentMock = mocksList[i].Key.Target;
+					if (parentMock == null)
+					{
+						mocksList.RemoveAt(i);
+					}
+					else if (Equals(parentMock, invocation.Instance))
+					{
+						mock = mocksList[i].Value;
+						break;
+					}
+					else
+					{
+						i++;
+					}
+				}
 			}
 
 			if (mock == null)
@@ -71,24 +88,7 @@ namespace Telerik.JustMock.Core.Behaviors
 				bool mustReturnAMock = invocation.InArrange || this.type == RecursiveMockingBehaviorType.ReturnMock;
 				if (mustReturnAMock || this.type == RecursiveMockingBehaviorType.ReturnDefault)
 				{
-					if (returnType.IsArray)
-					{
-						mock = Array.CreateInstance(returnType.GetElementType(), Enumerable.Repeat(0, returnType.GetArrayRank()).ToArray());
-					}
-
-					var idictionaryType = returnType.GetImplementationOfGenericInterface(typeof(IDictionary<,>));
-					if (mock == null && idictionaryType != null)
-					{
-						var dictType = typeof(Dictionary<,>).MakeGenericType(idictionaryType.GetGenericArguments());
-						mock = MockCollection.Create(returnType, repository, replicator, (IEnumerable)MockingUtil.CreateInstance(dictType));
-					}
-
-					var ienumerableType = returnType.GetImplementationOfGenericInterface(typeof(IEnumerable<>));
-					if (mock == null && ienumerableType != null)
-					{
-						var listType = typeof(List<>).MakeGenericType(ienumerableType.GetGenericArguments());
-						mock = MockCollection.Create(returnType, repository, replicator, (IEnumerable)MockingUtil.CreateInstance(listType));
-					}
+					mock = LooseBehaviorReturnRules.CreateValue(returnType, parentMock);
 
 					if (mock == null && mustReturnAMock)
 					{
@@ -122,10 +122,10 @@ namespace Telerik.JustMock.Core.Behaviors
 
 				if (mocksList == null)
 				{
-					mocksList = new List<KeyValuePair<object, object>>();
+					mocksList = new List<KeyValuePair<WeakReference, object>>();
 					mocks.Add(invocation.Method, mocksList);
 				}
-				mocksList.Add(new KeyValuePair<object, object>(invocation.Instance, mock));
+				mocksList.Add(new KeyValuePair<WeakReference, object>(new WeakReference(invocation.Instance), mock));
 
 				var mockMixin = MocksRepository.GetMockMixin(mock, null);
 				if (parentMock != null && mockMixin != null)
